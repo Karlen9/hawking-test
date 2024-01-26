@@ -1,31 +1,38 @@
 "use client";
 
-import {CartIcon, DeleteIcon} from "@/app/shared";
+import { CartIcon, DeleteIcon } from "@/app/shared";
 import { useEffect, useState } from "react";
-import { useCart, CartProductsType } from "@/app/pages/cart/api/useCart";
+import { useCart } from "@/app/pages/cart/api/useCart";
 import { useAuth } from "@/app/pages/cart/api/useAuth";
 import { useGetHeader } from "@/app/widgets/Header/api/useGetHeader";
+import { CartProductsType, convertToCamelCase } from "@/app/shared/types/types";
 
 const Cart = () => {
   const { isAuth } = useAuth();
   const { products, summary, clearCart } = useCart();
   const { headerData } = useGetHeader();
 
+  const formattedHeaderData = convertToCamelCase(headerData);
+  const formattedSummary = convertToCamelCase(summary);
+  const formattedProducts = products && products?.map(convertToCamelCase);
+
   return (
     <>
-      {isAuth  && (
+      {isAuth && (
         <div className="p-14">
           <div className="top-20 right-0 w-full rounded-md p-10 bg-slate-100">
             <section className="border-b-1 flex justify-between border-b pb-3">
               <div className="flex gap-x-2 items-center">
                 <CartIcon width={20} color="#777777" />
                 <span className="rounded-3xl text-white bg-secondary-color text-sm px-2 ">
-                  {summary?.TotalProducts}
+                  {formattedSummary?.totalProducts ?? "N/A"}
                 </span>
               </div>
               <span>
-                Total:&nbsp;
-                <span className="text-secondary-color">{summary?.Total}</span>
+                Всего:&nbsp;
+                <span className="text-secondary-color">
+                  {formattedSummary?.total ?? "N/A"}
+                </span>
               </span>
             </section>
             {products?.length ? (
@@ -42,9 +49,13 @@ const Cart = () => {
                       <td></td>
                     </tr>
 
-                    {products &&
-                      products.map((item) => (
-                        <CartItem key={item?.Id} item={item} userId={headerData?.UsedGuid ?? ''} />
+                    {formattedProducts &&
+                      formattedProducts.map((item) => (
+                        <CartItem
+                          key={item?.id}
+                          item={item as CartProductsType}
+                          userId={formattedHeaderData?.usedGuid ?? ""}
+                        />
                       ))}
                   </tbody>
                 </table>
@@ -54,7 +65,7 @@ const Cart = () => {
                 <h2>Нет продуктов</h2>
               </section>
             )}
-            {summary?.TotalProducts ? (
+            {formattedSummary?.totalProducts ? (
               <section className="flex w-full justify-end pt-6 ">
                 <button
                   className="flex whitespace-nowrap p-4 border rounded-md bg-red-400 text-white font-medium"
@@ -80,7 +91,7 @@ const CartItem = ({
 }) => {
   const { changeQuantity, deleteItem, incrementQuantity, decrementQuantity } =
     useCart();
-  const [itemQuantity, setItemQuantity] = useState(item?.Quantity);
+  const [itemQuantity, setItemQuantity] = useState(item?.quantity);
 
   const handleChangeQuantity = (e: React.ChangeEvent<HTMLInputElement>) => {
     setItemQuantity(parseInt(e.target.value, 10));
@@ -89,37 +100,36 @@ const CartItem = ({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.type === "string") return;
     if (e.key === "Enter") {
-      console.log(itemQuantity);
-      changeQuantity(item?.Id, userId, itemQuantity);
+      changeQuantity(item?.id, userId, itemQuantity);
     }
   };
 
   useEffect(() => {
-    setItemQuantity(item?.Quantity);
-  }, [item?.Quantity]);
+    setItemQuantity(item?.quantity);
+  }, [item?.quantity]);
 
   return (
     <tr>
       <td className="border h-auto max-w-16">
         <img
-          src={`data:image/${item.Images[0].FileExtension};base64,${item.Images[0].Image}`}
+          src={`data:image/${item.images[0].fileExtension};base64,${item.images[0].image}`}
           alt=""
         />
       </td>
-      <td className="pl-3 w-full border whitespace-nowrap pr-3">{item.Name}</td>
+      <td className="pl-3 w-full border whitespace-nowrap pr-3">{item.name}</td>
       <td className="border min-w-40 justify-center items-center px-2">
-        {item.Price}
+        <span>{item.price}</span>
       </td>
 
       <td className="text-center px-2 h-full items-center">
         <div className="flex h-full items-center">
           <button
-            disabled={item?.Quantity <= 1}
+            disabled={item?.quantity <= 1}
             className={`px-2 bg-slate-300 ${
-              item?.Quantity < 2 && "bg-slate-100 cursor-not-allowed"
+              item?.quantity < 2 && "cursor-not-allowed"
             }`}
             onClick={() =>
-              item?.Quantity > 1 && decrementQuantity(item?.Id, userId)
+              item?.quantity > 1 && decrementQuantity(item?.id, userId)
             }
           >
             -
@@ -137,7 +147,7 @@ const CartItem = ({
           <button
             className="px-2 bg-slate-300"
             onClick={() => {
-              incrementQuantity(item?.Id, userId);
+              incrementQuantity(item?.id, userId);
             }}
           >
             +
@@ -148,7 +158,7 @@ const CartItem = ({
       <td>
         <button
           className="flex items-center p-2"
-          onClick={() => deleteItem(item.Id, userId)}
+          onClick={() => deleteItem(item.id, userId)}
         >
           <DeleteIcon width={20} />
         </button>

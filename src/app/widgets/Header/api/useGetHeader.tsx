@@ -1,17 +1,12 @@
+import { BackendHeaderDataType } from "@/app/shared/types/types";
 import axios from "axios";
 import useSWR from "swr";
-
-type HeaderDataType = {
-  LogoImg: string;
-  UsedGuid: string;
-  UserName: string;
-};
 
 const fetcher = () =>
   axios.get("/api/ShoppingCart/header").then((res) => res.data);
 
 export const useGetHeader = () => {
-  const { data, error } = useSWR<HeaderDataType>(
+  const { data, error } = useSWR<BackendHeaderDataType>(
     "/api/ShoppingCart/header",
     fetcher
   );

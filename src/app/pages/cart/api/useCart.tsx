@@ -1,39 +1,17 @@
+import { BackendCartProductsType, BackendSummaryType } from "@/app/shared/types/types";
 import axios from "axios";
 import useSWR from "swr";
 
-export type CartProductsType = {
-  Id: number;
-  Name: string;
-  Description: string;
-  Quantity: number;
-  Unit: string;
-  Currency: string;
-  Price: number;
-  DiscountedPrice: number;
-  Images: [
-    {
-      FileName: string;
-      FileExtension: string;
-      Image: string;
-    }
-  ];
-};
-
-type SummaryType = {
-  TotalProducts: number;
-  Discount: number;
-  Total: number;
-};
 
 const fetcher = (url: string) => axios.get(url).then((res) => res.data);
 
 export const useCart = () => {
-  const { data, error, mutate } = useSWR<CartProductsType[]>(
+  const { data, error, mutate } = useSWR<BackendCartProductsType[]>(
     "/api/ShoppingCart/products",
     fetcher
   );
 
-  const { data: summary, mutate: summaryMutate } = useSWR<SummaryType>(
+  const { data: summary, mutate: summaryMutate } = useSWR<BackendSummaryType>(
     "/api/ShoppingCart/baskedsummary",
     fetcher
   );
